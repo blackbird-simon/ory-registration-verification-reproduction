@@ -1,26 +1,29 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {useEffect} from 'react';
 import './App.css';
+import { useAuth } from "react-oidc-context";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const auth = useAuth();
+
+    useEffect(() => {
+      if (!auth.isLoading && !auth.isAuthenticated) {
+        auth.signinRedirect({
+          scope: "openid offline_access email",
+          prompt: "login",
+        })}
+    }, [auth]);
+
+    if (auth.isAuthenticated) {
+      return <>
+        <h1>Logged in as: {auth.user?.profile.sub}</h1>
+        <p>Email: {auth.user?.profile.email}</p>
+        <button onClick={() => auth.signoutRedirect({post_logout_redirect_uri: `${window.location.origin}/`})}>
+          Logout
+        </button>
+      </>
+    }
+
+    return <p>Loading....</p>
 }
 
 export default App;
